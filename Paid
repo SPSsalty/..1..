@@ -36,7 +36,7 @@ local quantityOptions = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}  -- Example quantities
 local pickaxeOptions = {"Gem Pickaxe", "Diamond Pickaxe", "Gold Pickaxe"}
 
 -- Add Dropdown for Item ID
-local itemIDDropdown = BuyLeftBox:AddDropdown('Item ID Dropdown', {
+local itemIDDropdown = MainRightBox:AddDropdown('Item ID Dropdown', {
     Text = 'Select Item ID',
     Default = 4,  -- Default item ID
     Values = itemIDOptions,  -- List of available items as Values
@@ -58,7 +58,7 @@ local quantityDropdown = MainRightBox:AddDropdown('Quantity Dropdown', {
 })
 
 -- Add Dropdown for Pickaxe Selection
-local pickaxeDropdown = MainRightBox:AddDropdown('Pickaxe Dropdown', {
+local pickaxeDropdown = BuyLeftBox:AddDropdown('Pickaxe Dropdown', {
     Text = 'Select Pickaxe',
     Default = "Gold Pickaxe",  -- Default pickaxe
     Values = pickaxeOptions,  -- List of available pickaxes as Values
