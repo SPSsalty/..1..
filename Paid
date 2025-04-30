@@ -4,7 +4,7 @@ local teleportLocations = {
     ["Spawn"] = Vector3.new(2641, -1000, -6723),
     ["Gem Mine"] = Vector3.new(2935, -1004, -7047),
     ["Drill Site"] = Vector3.new(3080, -1003, -6770),
-    ["Pirate"] = Vector3.new(2285, -2143, -6739)
+    ["Pirate"] = Vector3.new(2285, -2143, -6739),
     ["UnderWorld"] = Vector3.new(-948, -2154, -6704),
 }
 local itemIDOptions = {1,2,3,4,5,6,7,8,9,10}
