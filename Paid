@@ -32,8 +32,8 @@ local quantity = 1  -- Default quantity
 local itemIDOptions = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}  -- Example item IDs
 local quantityOptions = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}  -- Example quantities
 
--- Pickaxe options for the dropdown
-local pickaxeOptions = {"Gem Pickaxe", "Diamond Pickaxe", "Gold Pickaxe"}
+-- Item options for the dropdown
+local itemOptions = {"Ice Pickaxe", "Grass Pickaxe", "God Pickaxe", "Gem Pickaxe", "Diamond Pickaxe", "Gold Pickaxe", "Dynamite: 150"}
 
 -- Add Dropdown for Item ID
 local itemIDDropdown = MainRightBox:AddDropdown('Item ID Dropdown', {
@@ -58,26 +58,26 @@ local quantityDropdown = MainRightBox:AddDropdown('Quantity Dropdown', {
 })
 
 -- Add Dropdown for Pickaxe Selection
-local pickaxeDropdown = BuyLeftBox:AddDropdown('Pickaxe Dropdown', {
-    Text = 'Select Pickaxe',
-    Default = "Gold Pickaxe",  -- Default pickaxe
-    Values = pickaxeOptions,  -- List of available pickaxes as Values
+local itemDropdown = BuyLeftBox:AddDropdown('Item Dropdown', {
+    Text = 'Select Item',
+    Default = "Dynamite",  -- Default pickaxe
+    Values = itemOptions,  -- List of available pickaxes as Values
     Callback = function(value)
-        selectedPickaxe = value  -- Set selected pickaxe to the chosen value
-        print("Selected Pickaxe: " .. selectedPickaxe)  -- For debugging or feedback
+        selectedItem = value  -- Set selected item to the chosen value
+        print("Selected Item: " .. selectedItem)  -- For debugging or feedback
     end
 })
 
--- Add Button to Buy Selected Pickaxe
-BuyLeftBox:AddButton('Buy Pickaxe', function()
-    -- Buy the selected pickaxe using the BuyTool remote
+-- Add Button to Buy Selected Item
+BuyLeftBox:AddButton('Buy Item', function()
+    -- Buy the selected item using the BuyTool remote
     local args = {
-        [1] = selectedPickaxe  -- Pass the selected pickaxe name to the BuyTool remote
+        [1] = selectedItem  -- Pass the selected pickaxe name to the BuyTool remote
     }
 
-    -- Fire the BuyTool remote to purchase the pickaxe
+    -- Fire the BuyTool remote to purchase the item
     game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("BuyTool"):FireServer(unpack(args))
-    print("Buying Pickaxe: " .. selectedPickaxe)  -- For feedback
+    print("Buying Item: " .. selectedItem)  -- For feedback
 end)
 
 -- Function to start the auto-sell loop
