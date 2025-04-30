@@ -289,4 +289,4 @@ ExtraRightBox:AddButton("Close UI", function()
     Library:Unload()
 end)
 
-ExtraRightBox:AddLabel("Mining World V1.0")
+ExtraRightBox:AddLabel("Mining World V1.1")
