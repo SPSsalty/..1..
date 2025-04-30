@@ -1,44 +1,47 @@
 local repo = 'https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/'
 
+-- Library and Theme Manager
 local Library = loadstring(game:HttpGet(repo .. 'Library.lua'))()
 local ThemeManager = loadstring(game:HttpGet(repo .. 'addons/ThemeManager.lua'))()
 
+-- Services and Variables
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
+-- UI Window and Tabs
 local Window = Library:CreateWindow({
     Title = 'Auralis | Premium Version',
-    Center = true, 
+    Center = true,
     AutoShow = true,
 })
 
 local Tabs = {
-    Main = Window:AddTab('Main') 
+    Main = Window:AddTab('Main'), 
+    Extra = Window:AddTab('Extra')
 }
 
+-- Groupboxes
 local MainLeftBox = Tabs.Main:AddLeftGroupbox('Auto')
 local MainRightBox = Tabs.Main:AddRightGroupbox('AutoSell Settings')
 local BuyLeftBox = Tabs.Main:AddLeftGroupbox('Buy')
-
--- Create a new groupbox for the Teleport section
+local ExtraLeftBox = Tabs.Extra:AddLeftGroupbox('Extra')
+local ExtraRightBox = Tabs.Extra:AddRightGroupbox('Info')
 local TeleportBox = Tabs.Main:AddLeftGroupbox('Teleport')
 
--- Variables to control the auto-sell loop
+-- Variables for Auto-Sell Loop
 local autoSellEnabled = false
 local sellLoop
 local itemID = 4  -- Default item ID
 local quantity = 1  -- Default quantity
 
--- Predefined lists for item ID and quantity (these can be adjusted as needed)
+-- Predefined Options for Item IDs, Quantities, and Items
 local itemIDOptions = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}  -- Example item IDs
 local quantityOptions = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}  -- Example quantities
-
--- Item options for the dropdown
 local itemOptions = {"Ice Pickaxe", "Grass Pickaxe", "God Pickaxe", "Gem Pickaxe", "Diamond Pickaxe", "Gold Pickaxe", "Dynamite"}
 
--- Define teleport locations
+-- Predefined Teleport Locations
 local teleportLocations = {
     ["Spawn"] = Vector3.new(2641, -1000, -6723),
     ["Gem Mine"] = Vector3.new(2935, -1004, -7047),
@@ -49,10 +52,10 @@ local teleportLocations = {
 local itemIDDropdown = MainRightBox:AddDropdown('Item ID Dropdown', {
     Text = 'Select Item ID',
     Default = 4,  -- Default item ID
-    Values = itemIDOptions,  -- List of available items as Values
+    Values = itemIDOptions,  -- List of available items
     Callback = function(value)
-        itemID = value  -- Set item ID to the selected value
-        print("Item ID set to: " .. itemID)  -- For debugging or feedback
+        itemID = value
+        print("Item ID set to: " .. itemID)
     end
 })
 
@@ -60,56 +63,53 @@ local itemIDDropdown = MainRightBox:AddDropdown('Item ID Dropdown', {
 local quantityDropdown = MainRightBox:AddDropdown('Quantity Dropdown', {
     Text = 'Select Quantity',
     Default = 1,  -- Default quantity
-    Values = quantityOptions,  -- List of available quantities as Values
+    Values = quantityOptions,  -- List of available quantities
     Callback = function(value)
-        quantity = value  -- Set quantity to the selected value
-        print("Quantity set to: " .. quantity)  -- For debugging or feedback
+        quantity = value
+        print("Quantity set to: " .. quantity)
     end
 })
 
--- Add Dropdown for Pickaxe Selection
+-- Add Dropdown for Item Selection
 local itemDropdown = BuyLeftBox:AddDropdown('Item Dropdown', {
     Text = 'Select Item',
-    Default = "Dynamite",  -- Default pickaxe
-    Values = itemOptions,  -- List of available pickaxes as Values
+    Default = "Dynamite",  -- Default item
+    Values = itemOptions,  -- List of available items
     Callback = function(value)
-        selectedItem = value  -- Set selected item to the chosen value
-        print("Selected Item: " .. selectedItem)  -- For debugging or feedback
+        selectedItem = value
+        print("Selected Item: " .. selectedItem)
     end
 })
 
 -- Add Button to Buy Selected Item
 BuyLeftBox:AddButton('Buy Item', function()
-    local args = {
-        [1] = selectedItem  -- Pass the selected pickaxe name to the BuyTool remote
-    }
-
+    local args = { [1] = selectedItem }
     game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("BuyTool"):FireServer(unpack(args))
-    print("Buying Item: " .. selectedItem)  -- For feedback
+    print("Buying Item: " .. selectedItem)
 end)
 
--- Add Dropdown for teleport location selection in Teleport section
+-- Add Dropdown for Teleport Location
 local locationDropdown = TeleportBox:AddDropdown('Location Dropdown', {
     Text = 'Select Teleport Location',
     Default = "Spawn",  -- Default location
-    Values = {"Spawn", "Gem Mine", "UnderWorld"},  -- Locations available in the dropdown
+    Values = {"Spawn", "Gem Mine", "UnderWorld"},  -- Locations available
     Callback = function(value)
-        selectedLocation = teleportLocations[value]  -- Get the selected location coordinates
-        print("Selected location: " .. value)  -- For debugging
+        selectedLocation = teleportLocations[value]
+        print("Selected location: " .. value)
     end
 })
 
--- Add Button to teleport to selected location
+-- Add Button to Teleport
 TeleportBox:AddButton('Teleport to Location', function()
     if selectedLocation then
         LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(selectedLocation))
-        print("Teleporting to: " .. tostring(selectedLocation))  -- For feedback
+        print("Teleporting to: " .. tostring(selectedLocation))
     else
-        print("No location selected!")  -- If no location is selected, show a warning
+        print("No location selected!")
     end
 end)
 
--- Function to start the auto-sell loop
+-- Function to Start Auto-Sell Loop
 function AutoSell()
     autoSellEnabled = true
     sellLoop = RunService.Heartbeat:Connect(function()
@@ -118,11 +118,11 @@ function AutoSell()
                 [1] = itemID,  -- Use dynamic item ID
                 [2] = quantity  -- Use dynamic quantity
             }
-
+            
             local success, errorMessage = pcall(function()
                 game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("SellItem"):FireServer(unpack(args))
             end)
-
+            
             if not success then
                 warn("Error while trying to sell item: " .. errorMessage)
             end
@@ -134,7 +134,7 @@ function AutoSell()
     end)
 end
 
--- Function to stop the auto-sell loop
+-- Function to Stop Auto-Sell Loop
 function StopAutoSell()
     autoSellEnabled = false
     if sellLoop then
@@ -142,13 +142,13 @@ function StopAutoSell()
     end
 end
 
--- Add AutoSell toggle
+-- Add Auto-Sell Toggle
 local statusLabel = MainLeftBox:AddLabel("Auto Sell Status: Inactive")
 
 MainLeftBox:AddToggle('AutoSell', {
     Text = "Auto Sell",
     CurrentValue = false,
-    Flag = "AutoSell",  -- Used to save the toggle state across sessions
+    Flag = "AutoSell",
     Callback = function(state)
         if state then
             AutoSell()
@@ -157,5 +157,54 @@ MainLeftBox:AddToggle('AutoSell', {
             StopAutoSell()
             statusLabel:SetText("Auto Sell Status: Inactive")
         end
+    end
+})
+
+-- Extra Information Section
+ExtraRightBox:AddLabel("Mining World V1.0")
+
+-- Button to Close UI
+ExtraRightBox:AddButton("Close UI", function()
+    Library:Unload()  -- Unload the entire library, closing the UI
+    print("UI Closed")
+end)
+
+-- UI Show/Hide with Keybind
+local keybind = Enum.KeyCode.F1  -- Default keybind is F1
+local uiVisible = true  -- Track UI visibility state
+
+-- Keybind Listener for Toggle
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end  -- Ignore if the input was already processed
+
+    if input.UserInputType == Enum.UserInputType.Keyboard then
+        if input.KeyCode == keybind then
+            uiVisible = not uiVisible
+            if uiVisible then
+                Library:Toggle()  -- Toggle UI visibility
+                print("UI Showed")
+            else
+                Library:Toggle()  -- Toggle UI visibility
+                print("UI Hidden")
+            end
+        end
+    end
+end)
+
+-- Dropdown to Set Keybind
+ExtraLeftBox:AddDropdown("Set Keybind", {
+    Text = "Choose Keybind",
+    Default = "F1",  -- Default key
+    Values = {"F1", "F2", "F3", "F4", "F5"},  -- List of available keys
+    Callback = function(value)
+        local keybinds = {
+            F1 = Enum.KeyCode.F1,
+            F2 = Enum.KeyCode.F2,
+            F3 = Enum.KeyCode.F3,
+            F4 = Enum.KeyCode.F4,
+            F5 = Enum.KeyCode.F5,
+        }
+        keybind = keybinds[value]  -- Set the new keybind
+        print("Keybind set to: " .. value)
     end
 })
