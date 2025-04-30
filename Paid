@@ -7,6 +7,7 @@ local ThemeManager = loadstring(game:HttpGet(repo .. 'addons/ThemeManager.lua'))
 -- Services and Variables
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
@@ -33,130 +34,147 @@ local TeleportBox = Tabs.Main:AddLeftGroupbox('Teleport')
 -- Variables for Auto-Sell Loop
 local autoSellEnabled = false
 local sellLoop
-local itemID = 4  -- Default item ID
-local quantity = 1  -- Default quantity
+local itemID = 4
+local quantity = 1
 
--- Predefined Options for Item IDs, Quantities, and Items
-local itemIDOptions = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}  -- Example item IDs
-local quantityOptions = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}  -- Example quantities
+-- Predefined Options
+local itemIDOptions = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+local quantityOptions = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 local itemOptions = {"Ice Pickaxe", "Grass Pickaxe", "God Pickaxe", "Gem Pickaxe", "Diamond Pickaxe", "Gold Pickaxe", "Dynamite"}
 
--- Predefined Teleport Locations
+-- Teleport Locations
 local teleportLocations = {
     ["Spawn"] = Vector3.new(2641, -1000, -6723),
     ["Gem Mine"] = Vector3.new(2935, -1004, -7047),
     ["UnderWorld"] = Vector3.new(-948, -2154, -6704),
 }
 
--- UI Show/Hide with Keybind
-local keybind = Enum.KeyCode.RightShift  -- Default keybind is F1
-local uiVisible = true  -- Track UI visibility state
+-- Keybind Toggling
+local selectedKeybind = Enum.KeyCode.RightShift
+local uiVisible = true
+local keybindListenerConnection
 
--- Keybind Listener for Toggle
-game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end  -- Ignore if the input was already processed
-
-    if input.UserInputType == Enum.UserInputType.Keyboard then
-        if input.KeyCode == keybind then
-            uiVisible = not uiVisible
-            if uiVisible then
-                Library:Toggle()  -- Toggle UI visibility
-                print("UI Showed")
-            else
-                Library:Toggle()  -- Toggle UI visibility
-                print("UI Hidden")
-            end
-        end
+-- Toggle UI Visibility Function
+local function ToggleUIVisibility(input)
+    print("Key pressed:", input.KeyCode.Name, "| Expected:", selectedKeybind.Name)
+    if input.KeyCode == selectedKeybind then
+        uiVisible = not uiVisible
+        Library:Toggle()
+        print(uiVisible and "UI Showed" or "UI Hidden")
     end
-end)
+end
 
--- Add Dropdown for Item ID
-local itemIDDropdown = MainRightBox:AddDropdown('Item ID Dropdown', {
+-- Keybind Listener Setup
+local function SetKeybindListener()
+    if keybindListenerConnection then
+        keybindListenerConnection:Disconnect()
+    end
+    keybindListenerConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            ToggleUIVisibility(input)
+        end
+    end)
+end
+
+-- Close UI and Cleanup
+local function CloseUI()
+    if keybindListenerConnection then
+        keybindListenerConnection:Disconnect()
+        print("Keybind listener disconnected")
+    end
+    Library:Unload()
+    print("UI Closed")
+end
+
+-- Init Keybind Listener
+SetKeybindListener()
+
+-- Dropdowns and Buttons
+MainRightBox:AddDropdown('Item ID Dropdown', {
     Text = 'Select Item ID',
-    Default = 4,  -- Default item ID
-    Values = itemIDOptions,  -- List of available items
+    Default = 4,
+    Values = itemIDOptions,
     Callback = function(value)
         itemID = value
-        print("Item ID set to: " .. itemID)
+        print("Item ID set to:", itemID)
     end
 })
 
--- Add Dropdown for Quantity
-local quantityDropdown = MainRightBox:AddDropdown('Quantity Dropdown', {
+MainRightBox:AddDropdown('Quantity Dropdown', {
     Text = 'Select Quantity',
-    Default = 1,  -- Default quantity
-    Values = quantityOptions,  -- List of available quantities
+    Default = 1,
+    Values = quantityOptions,
     Callback = function(value)
         quantity = value
-        print("Quantity set to: " .. quantity)
+        print("Quantity set to:", quantity)
     end
 })
 
--- Add Dropdown for Item Selection
-local itemDropdown = BuyLeftBox:AddDropdown('Item Dropdown', {
+local selectedItem = "Dynamite"
+BuyLeftBox:AddDropdown('Item Dropdown', {
     Text = 'Select Item',
-    Default = "Dynamite",  -- Default item
-    Values = itemOptions,  -- List of available items
+    Default = selectedItem,
+    Values = itemOptions,
     Callback = function(value)
         selectedItem = value
-        print("Selected Item: " .. selectedItem)
+        print("Selected Item:", selectedItem)
     end
 })
 
--- Add Button to Buy Selected Item
 BuyLeftBox:AddButton('Buy Item', function()
-    local args = { [1] = selectedItem }
-    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("BuyTool"):FireServer(unpack(args))
-    print("Buying Item: " .. selectedItem)
+    if selectedItem then
+        local args = {selectedItem}
+        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("BuyTool"):FireServer(unpack(args))
+        print("Buying Item:", selectedItem)
+    else
+        warn("No item selected!")
+    end
 end)
 
--- Add Dropdown for Teleport Location
-local locationDropdown = TeleportBox:AddDropdown('Location Dropdown', {
+local selectedLocation = teleportLocations["Spawn"]
+TeleportBox:AddDropdown('Location Dropdown', {
     Text = 'Select Teleport Location',
-    Default = "Spawn",  -- Default location
-    Values = {"Spawn", "Gem Mine", "UnderWorld"},  -- Locations available
+    Default = "Spawn",
+    Values = {"Spawn", "Gem Mine", "UnderWorld"},
     Callback = function(value)
         selectedLocation = teleportLocations[value]
-        print("Selected location: " .. value)
+        print("Selected location:", value)
     end
 })
 
--- Add Button to Teleport
 TeleportBox:AddButton('Teleport to Location', function()
     if selectedLocation then
         LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(selectedLocation))
-        print("Teleporting to: " .. tostring(selectedLocation))
+        print("Teleporting to:", tostring(selectedLocation))
     else
         print("No location selected!")
     end
 end)
 
--- Function to Start Auto-Sell Loop
+-- AutoSell Functions
 function AutoSell()
     autoSellEnabled = true
     sellLoop = RunService.Heartbeat:Connect(function()
         if autoSellEnabled then
             local args = {
-                [1] = itemID,  -- Use dynamic item ID
-                [2] = quantity  -- Use dynamic quantity
+                [1] = itemID,
+                [2] = quantity
             }
-            
+
             local success, errorMessage = pcall(function()
                 game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("SellItem"):FireServer(unpack(args))
             end)
-            
+
             if not success then
-                warn("Error while trying to sell item: " .. errorMessage)
+                warn("Error while trying to sell item:", errorMessage)
             end
 
             wait(0.5)
-        else
-            sellLoop:Disconnect()
         end
     end)
 end
 
--- Function to Stop Auto-Sell Loop
 function StopAutoSell()
     autoSellEnabled = false
     if sellLoop then
@@ -164,7 +182,7 @@ function StopAutoSell()
     end
 end
 
--- Add Auto-Sell Toggle
+-- AutoSell Toggle
 local statusLabel = MainLeftBox:AddLabel("Auto Sell Status: Inactive")
 
 MainLeftBox:AddToggle('AutoSell', {
@@ -182,31 +200,33 @@ MainLeftBox:AddToggle('AutoSell', {
     end
 })
 
--- Extra Information Section
+-- Info Label
 ExtraRightBox:AddLabel("Mining World V1.0")
 
--- Dropdown to Set Keybind
 ExtraRightBox:AddDropdown("Set Keybind", {
     Text = "Hide/Show Keybind",
-    Default = "RightShift",  -- Default key
-    Values = {"RightShift", "RightControl", "RightAlt", "End", "F1"},  -- List of available keys
+    Default = "RightShift",
+    Values = {"RightShift", "RightControl", "RightAlt", "End", "F1"},
     Callback = function(value)
         local keybinds = {
             RightShift = Enum.KeyCode.RightShift,
-            RightCtrl = Enum.KeyCode.RightControl,
+            RightControl = Enum.KeyCode.RightControl,
             RightAlt = Enum.KeyCode.RightAlt,
             End = Enum.KeyCode.End,
             F1 = Enum.KeyCode.F1,
         }
-        keybind = keybinds[value]  -- Set the new keybind
-        print("Keybind set to: " .. value)
+
+        if keybinds[value] then
+            selectedKeybind = keybinds[value]
+            print("UI toggle keybind set to:", selectedKeybind.Name)
+            SetKeybindListener()
+        else
+            warn("Invalid keybind selected:", value)
+        end
     end
 })
 
--- Button to Close UI
+-- Close UI Button
 ExtraRightBox:AddButton("Close UI", function()
-    Library:Unload()  -- Unload the entire library, closing the UI
-    print("UI Closed")
+    CloseUI()
 end)
-
-
