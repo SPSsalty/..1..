@@ -2,10 +2,8 @@ local repo = 'https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main
 
 local Library = loadstring(game:HttpGet(repo .. 'Library.lua'))()
 local ThemeManager = loadstring(game:HttpGet(repo .. 'addons/ThemeManager.lua'))()
-local SaveManager = loadstring(game:HttpGet(repo .. 'addons/SaveManager.lua'))()
 
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
@@ -21,7 +19,8 @@ local Tabs = {
 }
 
 local MainLeftBox = Tabs.Main:AddLeftGroupbox('Auto')
-local MainRightBox = Tabs.Main:AddRightGroupbox('Item Settings')
+local MainRightBox = Tabs.Main:AddRightGroupbox('AutoSell Settings')
+local BuyLeftBox = Tabs.Main:AddLeftGroupbox('Buy')
 
 -- Variables to control the auto-sell loop
 local autoSellEnabled = false
@@ -29,28 +28,57 @@ local sellLoop
 local itemID = 4  -- Default item ID
 local quantity = 1  -- Default quantity
 
--- Add sliders for selecting item ID and quantity with text labels
-local itemIDSlider = MainRightBox:AddSlider('Item ID Slider', {
-    Text = 'Item ID Slider',
-    Min = 1,  -- Min item ID (customize as needed)
-    Max = 10,  -- Max item ID (customize as needed)
+-- Predefined lists for item ID and quantity (these can be adjusted as needed)
+local itemIDOptions = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}  -- Example item IDs
+local quantityOptions = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}  -- Example quantities
+
+-- Pickaxe options for the dropdown
+local pickaxeOptions = {"Gem Pickaxe", "Diamond Pickaxe", "Gold Pickaxe"}
+
+-- Add Dropdown for Item ID
+local itemIDDropdown = BuyLeftBox:AddDropdown('Item ID Dropdown', {
+    Text = 'Select Item ID',
     Default = 4,  -- Default item ID
-    Rounding = 1.0,  -- Round to 1 decimal place
+    Values = itemIDOptions,  -- List of available items as Values
     Callback = function(value)
-        itemID = value  -- Set item ID to the value selected from the slider
+        itemID = value  -- Set item ID to the selected value
+        print("Item ID set to: " .. itemID)  -- For debugging or feedback
     end
 })
 
-local quantitySlider = MainRightBox:AddSlider('Quantity Slider', {
-    Text = 'Quantity Slider',
-    Min = 1,  -- Min quantity
-    Max = 10,  -- Max quantity (adjust as needed)
+-- Add Dropdown for Quantity
+local quantityDropdown = MainRightBox:AddDropdown('Quantity Dropdown', {
+    Text = 'Select Quantity',
     Default = 1,  -- Default quantity
-    Rounding = 1.0,  -- Round to 1 decimal place
+    Values = quantityOptions,  -- List of available quantities as Values
     Callback = function(value)
-        quantity = value  -- Set quantity to the value selected from the slider
+        quantity = value  -- Set quantity to the selected value
+        print("Quantity set to: " .. quantity)  -- For debugging or feedback
     end
 })
+
+-- Add Dropdown for Pickaxe Selection
+local pickaxeDropdown = MainRightBox:AddDropdown('Pickaxe Dropdown', {
+    Text = 'Select Pickaxe',
+    Default = "Gold Pickaxe",  -- Default pickaxe
+    Values = pickaxeOptions,  -- List of available pickaxes as Values
+    Callback = function(value)
+        selectedPickaxe = value  -- Set selected pickaxe to the chosen value
+        print("Selected Pickaxe: " .. selectedPickaxe)  -- For debugging or feedback
+    end
+})
+
+-- Add Button to Buy Selected Pickaxe
+BuyLeftBox:AddButton('Buy Pickaxe', function()
+    -- Buy the selected pickaxe using the BuyTool remote
+    local args = {
+        [1] = selectedPickaxe  -- Pass the selected pickaxe name to the BuyTool remote
+    }
+
+    -- Fire the BuyTool remote to purchase the pickaxe
+    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("BuyTool"):FireServer(unpack(args))
+    print("Buying Pickaxe: " .. selectedPickaxe)  -- For feedback
+end)
 
 -- Function to start the auto-sell loop
 function AutoSell()
@@ -62,11 +90,18 @@ function AutoSell()
                 [2] = quantity  -- Use dynamic quantity
             }
 
-            -- Fire the SellItem remote
-            game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("SellItem"):FireServer(unpack(args))
+            -- Fire the SellItem remote with error handling
+            local success, errorMessage = pcall(function()
+                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("SellItem"):FireServer(unpack(args))
+            end)
+
+            if not success then
+                warn("Error while trying to sell item: " .. errorMessage)
+            end
+
+            wait(0.5)  -- Throttle the loop with a delay to avoid rapid calls
         else
-            -- If auto-sell is disabled, stop the loop
-            sellLoop:Disconnect()
+            sellLoop:Disconnect()  -- Disconnect the loop when auto-sell is disabled
         end
     end)
 end
@@ -80,6 +115,8 @@ function StopAutoSell()
 end
 
 -- Add AutoSell toggle
+local statusLabel = MainLeftBox:AddLabel("Auto Sell Status: Inactive")
+
 MainLeftBox:AddToggle('AutoSell', {
     Text = "Auto Sell",
     CurrentValue = false,
@@ -88,9 +125,11 @@ MainLeftBox:AddToggle('AutoSell', {
         if state then
             -- If Auto Sell is enabled, start selling items
             AutoSell()
+            statusLabel:SetText("Auto Sell Status: Active")
         else
             -- If Auto Sell is disabled, stop the auto-sell loop
             StopAutoSell()
+            statusLabel:SetText("Auto Sell Status: Inactive")
         end
     end
 })
