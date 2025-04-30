@@ -188,15 +188,15 @@ ExtraRightBox:AddLabel("Mining World V1.0")
 -- Dropdown to Set Keybind
 ExtraRightBox:AddDropdown("Set Keybind", {
     Text = "Hide/Show Keybind",
-    Default = "F1",  -- Default key
-    Values = {"RightShift", "F2", "F3", "F4", "F5"},  -- List of available keys
+    Default = "RightShift",  -- Default key
+    Values = {"RightShift", "RightControl", "RightAlt", "End", "F1"},  -- List of available keys
     Callback = function(value)
         local keybinds = {
             RightShift = Enum.KeyCode.RightShift,
-            F2 = Enum.KeyCode.F2,
-            F3 = Enum.KeyCode.F3,
-            F4 = Enum.KeyCode.F4,
-            F5 = Enum.KeyCode.F5,
+            RightCtrl = Enum.KeyCode.RightControl,
+            RightAlt = Enum.KeyCode.RightAlt,
+            End = Enum.KeyCode.End,
+            F1 = Enum.KeyCode.F1,
         }
         keybind = keybinds[value]  -- Set the new keybind
         print("Keybind set to: " .. value)
