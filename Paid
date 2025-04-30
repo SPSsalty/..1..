@@ -5,11 +5,13 @@ local teleportLocations = {
     ["Gem Mine"] = Vector3.new(2935, -1004, -7047),
     ["Drill Site"] = Vector3.new(3080, -1003, -6770),
     ["Pirate"] = Vector3.new(2155, -2143, -6799),
+    ["Coral"] = Vector3.new(2153, -2144, -6539),
+    ["Witch"] = Vector3.new(1979, -2138, -6501),
     ["UnderWorld"] = Vector3.new(-948, -2154, -6704),
 }
-local itemIDOptions = {1,2,3,4,5,6,7,8,9,10}
+local itemIDOptions = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}
 local quantityOptions = {1,2,3,4,5,6,7,8,9,10}
-local itemOptions = {"Void Pick", "Hellfire Pick", "Ice Pickaxe", "Grass Pickaxe", "God Pickaxe", "Gem Pickaxe", "Diamond Pickaxe", "Gold Pickaxe", "Dynamite"}
+local itemOptions = {"Lava Pickaxe", "Coral Chopper", "Void Pick", "Hellfire Pick", "Ice Pickaxe", "Grass Pickaxe", "God Pickaxe", "Gem Pickaxe", "Diamond Pickaxe", "Gold Pickaxe", "Dynamite"}
 local craftItems = {"Gear", "Alternator", "Battery", "Motor"}
 
 --[[ // Services & Base References ]]--
@@ -36,7 +38,7 @@ local Tabs = {
 
 local MainLeftBox = Tabs.Main:AddLeftGroupbox('Auto')
 local MainRightBox = Tabs.Main:AddRightGroupbox('AutoSell Settings')
-local BuyLeftBox = Tabs.Main:AddLeftGroupbox('Buy')
+local ItemLeftBox = Tabs.Main:AddLeftGroupbox('Item Menu')
 local DrillRightBox = Tabs.Main:AddRightGroupbox('Drill')
 local TeleportBox = Tabs.Main:AddLeftGroupbox('Teleport')
 local ExtraLeftBox = Tabs.Extra:AddLeftGroupbox('Extra')
@@ -99,20 +101,42 @@ MainRightBox:AddDropdown('Quantity', {
 --[[ // Buy Item Logic ]]--
 local selectedItem = "Dynamite"
 
-BuyLeftBox:AddDropdown('Item Dropdown', {
+ItemLeftBox:AddDropdown('Item Dropdown', {
     Text = 'Select Item',
     Default = selectedItem,
     Values = itemOptions,
     Callback = function(val) selectedItem = val end
 })
 
-BuyLeftBox:AddButton('Buy Item', function()
+ItemLeftBox:AddButton('Buy Item', function()
     if selectedItem then
         Remotes:WaitForChild("BuyTool"):FireServer(selectedItem)
     end
 end)
 
---[[ // Craft Item Logic ]]--
+--[[ // Craft Item Logic (Item Section) ]]--
+local itemCraftables = {"Captain's Pick", "Sharkee"}
+local selectedItemCraft = "Captain's Pick"
+
+ItemLeftBox:AddDropdown('Craftable Item', {
+    Text = 'Select Craftable Item',
+    Default = selectedItemCraft,
+    Values = itemCraftables,
+    Callback = function(val)
+        selectedItemCraft = val
+    end
+})
+
+ItemLeftBox:AddButton('Craft Item', function()
+    if selectedItemCraft then
+        local success, err = pcall(function()
+            Remotes:WaitForChild("Craft"):FireServer(selectedItemCraft)
+        end)
+        if not success then warn("Crafting failed:", err) end
+    end
+end)
+
+--[[ // Craft Item Logic (Drill Section) ]]--
 local selectedCraftItem = "Gear"
 
 DrillRightBox:AddDropdown("Craft Item", {
@@ -168,7 +192,7 @@ local selectedLocation = teleportLocations["Spawn"]
 TeleportBox:AddDropdown('Location', {
     Text = 'Select Teleport Location',
     Default = "Spawn",
-    Values = {"Spawn", "Gem Mine", "Drill Site", "Pirate", "UnderWorld"},
+    Values = {"Spawn", "Gem Mine", "Drill Site", "Pirate", "Coral", "Witch","UnderWorld"},
     Callback = function(val)
         selectedLocation = teleportLocations[val]
     end
