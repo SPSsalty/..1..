@@ -1,0 +1,267 @@
+--[[ // Configuration ]]--
+local repo = 'https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/'
+local teleportLocations = {
+    ["Spawn"] = Vector3.new(2641, -1000, -6723),
+    ["Gem Mine"] = Vector3.new(2935, -1004, -7047),
+    ["Drill Site"] = Vector3.new(3080, -1003, -6770),
+    ["UnderWorld"] = Vector3.new(-948, -2154, -6704),
+}
+local itemIDOptions = {1,2,3,4,5,6,7,8,9,10}
+local quantityOptions = {1,2,3,4,5,6,7,8,9,10}
+local itemOptions = {"Void Pick", "Hellfire Pick", "Ice Pickaxe", "Grass Pickaxe", "God Pickaxe", "Gem Pickaxe", "Diamond Pickaxe", "Gold Pickaxe", "Dynamite"}
+local craftItems = {"Gear", "Alternator", "Battery", "Motor"}
+
+--[[ // Services & Base References ]]--
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local Remotes = game:GetService("ReplicatedStorage"):WaitForChild("Remotes")
+
+--[[ // UI Initialization ]]--
+local Library = loadstring(game:HttpGet(repo .. 'Library.lua'))()
+Library:Notify("UI Loaded", 2) -- optional, adds cleaner feedback
+Library.KeybindWarning = function(...) end -- disables logging for keybind presses
+
+local ThemeManager = loadstring(game:HttpGet(repo .. 'addons/ThemeManager.lua'))()
+
+local Window = Library:CreateWindow({ Title = 'Auralis | Premium Version', Center = true, AutoShow = true })
+
+local Tabs = {
+    Main = Window:AddTab('Main'),
+    Extra = Window:AddTab('Extra')
+}
+
+local MainLeftBox = Tabs.Main:AddLeftGroupbox('Auto')
+local MainRightBox = Tabs.Main:AddRightGroupbox('AutoSell Settings')
+local BuyLeftBox = Tabs.Main:AddLeftGroupbox('Buy')
+local DrillRightBox = Tabs.Main:AddRightGroupbox('Drill')
+local TeleportBox = Tabs.Main:AddLeftGroupbox('Teleport')
+local ExtraLeftBox = Tabs.Extra:AddLeftGroupbox('Extra')
+local ExtraRightBox = Tabs.Extra:AddRightGroupbox('Info')
+
+--[[ // AutoSell Logic ]]--
+local autoSellEnabled = false
+local sellLoop
+local itemID = 4
+local quantity = 1
+
+function AutoSell()
+    autoSellEnabled = true
+    sellLoop = RunService.Heartbeat:Connect(function()
+        if autoSellEnabled then
+            local success, errorMessage = pcall(function()
+                Remotes:WaitForChild("SellItem"):FireServer(itemID, quantity)
+            end)
+            if not success then warn("Error while selling:", errorMessage) end
+            task.wait(0.5)
+        end
+    end)
+end
+
+function StopAutoSell()
+    autoSellEnabled = false
+    if sellLoop then sellLoop:Disconnect() end
+end
+
+local statusLabel = MainLeftBox:AddLabel("Auto Sell Status: Inactive")
+
+MainLeftBox:AddToggle('AutoSell', {
+    Text = "Auto Sell",
+    CurrentValue = false,
+    Callback = function(state)
+        if state then
+            AutoSell()
+            statusLabel:SetText("Auto Sell Status: Active")
+        else
+            StopAutoSell()
+            statusLabel:SetText("Auto Sell Status: Inactive")
+        end
+    end
+})
+
+MainRightBox:AddDropdown('Item ID', {
+    Text = 'Select Item ID',
+    Default = 4,
+    Values = itemIDOptions,
+    Callback = function(val) itemID = val end
+})
+
+MainRightBox:AddDropdown('Quantity', {
+    Text = 'Select Quantity',
+    Default = 1,
+    Values = quantityOptions,
+    Callback = function(val) quantity = val end
+})
+
+--[[ // Buy Item Logic ]]--
+local selectedItem = "Dynamite"
+
+BuyLeftBox:AddDropdown('Item Dropdown', {
+    Text = 'Select Item',
+    Default = selectedItem,
+    Values = itemOptions,
+    Callback = function(val) selectedItem = val end
+})
+
+BuyLeftBox:AddButton('Buy Item', function()
+    if selectedItem then
+        Remotes:WaitForChild("BuyTool"):FireServer(selectedItem)
+    end
+end)
+
+--[[ // Craft Item Logic ]]--
+local selectedCraftItem = "Gear"
+
+DrillRightBox:AddDropdown("Craft Item", {
+    Text = "Select Craft Item",
+    Default = selectedCraftItem,
+    Values = craftItems,
+    Callback = function(val) selectedCraftItem = val end
+})
+
+DrillRightBox:AddButton("Craft Item", function()
+    if selectedCraftItem then
+        local success, err = pcall(function()
+            Remotes:WaitForChild("Craft"):FireServer(selectedCraftItem)
+        end)
+        if not success then warn("Crafting failed:", err) end
+    end
+end)
+
+--[[ // Auto Place Drill Parts ]]--
+local autoPlaceEnabled = false
+local autoPlaceLoop
+
+local function AutoPlace()
+    autoPlaceEnabled = true
+    autoPlaceLoop = RunService.Heartbeat:Connect(function()
+        if autoPlaceEnabled then
+            pcall(function() Remotes:WaitForChild("PlaceMotor"):FireServer() end)
+            pcall(function() Remotes:WaitForChild("PlaceAlternator"):FireServer() end)
+            for i = 1, 2 do
+                pcall(function() Remotes:WaitForChild("PlaceBattery"):FireServer(i) end)
+            end
+            task.wait(1.5)
+        end
+    end)
+end
+
+local function StopAutoPlace()
+    autoPlaceEnabled = false
+    if autoPlaceLoop then autoPlaceLoop:Disconnect() end
+end
+
+DrillRightBox:AddToggle('AutoPlace', {
+    Text = "Auto Place Drill Parts",
+    CurrentValue = false,
+    Callback = function(state)
+        if state then AutoPlace() else StopAutoPlace() end
+    end
+})
+
+--[[ // Teleport ]]--
+local selectedLocation = teleportLocations["Spawn"]
+
+TeleportBox:AddDropdown('Location', {
+    Text = 'Select Teleport Location',
+    Default = "Spawn",
+    Values = {"Spawn", "Gem Mine", "Drill Site", "UnderWorld"},
+    Callback = function(val)
+        selectedLocation = teleportLocations[val]
+    end
+})
+
+TeleportBox:AddButton('Teleport to Location', function()
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("HumanoidRootPart") and selectedLocation then
+        char:SetPrimaryPartCFrame(CFrame.new(selectedLocation))
+    end
+end)
+
+--[[ // WalkSpeed Slider ]]--
+ExtraLeftBox:AddSlider('WalkSpeed', {
+    Text = 'Walk Speed',
+    Default = 20,
+    Min = 10,
+    Max = 100,
+    Rounding = 0,
+    Callback = function(val)
+        local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum.WalkSpeed = val end
+    end
+})
+
+--[[ // Ctrl + Click Teleport ]]--
+local ctrlClickEnabled = true
+
+ExtraLeftBox:AddToggle('CtrlClickTP', {
+    Text = "Ctrl + Click Teleport",
+    CurrentValue = true,
+    Callback = function(state)
+        ctrlClickEnabled = state
+    end
+})
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed or not ctrlClickEnabled then return end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+        local mouse = LocalPlayer:GetMouse()
+        if mouse and mouse.Hit then
+            local position = mouse.Hit.p
+            local char = LocalPlayer.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                char:SetPrimaryPartCFrame(CFrame.new(position + Vector3.new(0, 5, 0)))
+            end
+        end
+    end
+end)
+
+--[[ // Keybind for UI Toggle ]]--
+local selectedKeybind = Enum.KeyCode.RightShift
+local keybindListenerConnection
+
+local function ToggleUIVisibility(input)
+    if input.KeyCode == selectedKeybind then
+        Library:Toggle()
+    end
+end
+
+local function SetKeybindListener()
+    if keybindListenerConnection then keybindListenerConnection:Disconnect() end
+    keybindListenerConnection = UserInputService.InputBegan:Connect(function(input, processed)
+        if not processed and input.UserInputType == Enum.UserInputType.Keyboard then
+            ToggleUIVisibility(input)
+        end
+    end)
+end
+
+SetKeybindListener()
+
+ExtraRightBox:AddDropdown("Set Keybind", {
+    Text = "Hide/Show Keybind",
+    Default = "RightShift",
+    Values = {"RightShift", "RightControl", "RightAlt", "End", "F1"},
+    Callback = function(val)
+        local keys = {
+            RightShift = Enum.KeyCode.RightShift,
+            RightControl = Enum.KeyCode.RightControl,
+            RightAlt = Enum.KeyCode.RightAlt,
+            End = Enum.KeyCode.End,
+            F1 = Enum.KeyCode.F1,
+        }
+        selectedKeybind = keys[val] or Enum.KeyCode.RightShift
+        SetKeybindListener()
+    end
+})
+
+--[[ // UI Close ]]--
+ExtraRightBox:AddButton("Close UI", function()
+    StopAutoSell()
+    StopAutoPlace()
+    if keybindListenerConnection then keybindListenerConnection:Disconnect() end
+    Library:Unload()
+end)
+
+ExtraRightBox:AddLabel("Mining World V1.0")
