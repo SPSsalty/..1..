@@ -29,8 +29,7 @@ local Tabs = {
 local MainLeftBox = Tabs.Main:AddLeftGroupbox('Auto')
 local MainRightBox = Tabs.Main:AddRightGroupbox('AutoSell Settings')
 local BuyLeftBox = Tabs.Main:AddLeftGroupbox('Buy')
-local ExtraLeftBox = Tabs.Extra:AddLeftGroupbox('Extra')
-local ExtraRightBox = Tabs.Extra:AddRightGroupbox('Info')
+local ExtraLeftBox = Tabs.Extra:AddLeftGroupbox('Info')
 
 --[[ // AutoSell Logic ]]--
 local autoSellEnabled = false
@@ -123,7 +122,7 @@ end
 
 SetKeybindListener()
 
-ExtraRightBox:AddDropdown("Set Keybind", {
+ExtraLeftBox:AddDropdown("Set Keybind", {
     Text = "Hide/Show Keybind",
     Default = "RightShift",
     Values = {"RightShift", "RightControl", "RightAlt", "End", "F1"},
@@ -141,10 +140,10 @@ ExtraRightBox:AddDropdown("Set Keybind", {
 })
 
 --[[ // UI Close ]]--
-ExtraRightBox:AddButton("Close UI", function()
+ExtraLeftBox:AddButton("Close UI", function()
     StopAutoSell()
     if keybindListenerConnection then keybindListenerConnection:Disconnect() end
     Library:Unload()
 end)
 
-ExtraRightBox:AddLabel("Mining World V1.0")
+ExtraLeftBox:AddLabel("Mining World V1.0")
