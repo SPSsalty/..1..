@@ -33,7 +33,7 @@ local itemIDOptions = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}  -- Example item IDs
 local quantityOptions = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}  -- Example quantities
 
 -- Item options for the dropdown
-local itemOptions = {"Ice Pickaxe", "Grass Pickaxe", "God Pickaxe", "Gem Pickaxe", "Diamond Pickaxe", "Gold Pickaxe", "Dynamite: 150"}
+local itemOptions = {"Ice Pickaxe", "Grass Pickaxe", "God Pickaxe", "Gem Pickaxe", "Diamond Pickaxe", "Gold Pickaxe", "Dynamite"}
 
 -- Add Dropdown for Item ID
 local itemIDDropdown = MainRightBox:AddDropdown('Item ID Dropdown', {
