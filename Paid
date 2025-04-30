@@ -1,0 +1,70 @@
+local repo = 'https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/'
+
+local Library = loadstring(game:HttpGet(repo .. 'Library.lua'))()
+local ThemeManager = loadstring(game:HttpGet(repo .. 'addons/ThemeManager.lua'))()
+local SaveManager = loadstring(game:HttpGet(repo .. 'addons/SaveManager.lua'))()
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+local Window = Library:CreateWindow({
+    Title = 'Auralis | Premium Version',
+    Center = true, 
+    AutoShow = true,
+})
+
+local Tabs = {
+    Main = Window:AddTab('Main') 
+}
+
+local MainLeftBox = Tabs.Main:AddLeftGroupbox('Auto')
+
+-- Variables to control the auto-sell loop
+local autoSellEnabled = false
+local sellLoop
+
+-- Function to start the auto-sell loop
+function AutoSell()
+    autoSellEnabled = true
+    sellLoop = RunService.Heartbeat:Connect(function()
+        if autoSellEnabled then
+            local args = {
+                [1] = 4,  -- Example ID of the item (can change as per game logic)
+                [2] = 1   -- Quantity to sell (adjust based on your logic)
+            }
+
+            -- Fire the SellItem remote
+            game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("SellItem"):FireServer(unpack(args))
+        else
+            -- If auto sell is disabled, stop the loop
+            sellLoop:Disconnect()
+        end
+    end)
+end
+
+-- Function to stop the auto-sell loop
+function StopAutoSell()
+    autoSellEnabled = false
+    if sellLoop then
+        sellLoop:Disconnect()  -- Stop the heartbeat loop if it's running
+    end
+end
+
+
+MainLeftBox:AddToggle('AutoSell', {
+    Text = "Auto Sell",
+    CurrentValue = false,
+    Flag = "AutoSell",  -- Used to save the toggle state across sessions
+    Callback = function(state)
+        if state then
+            -- If Auto Sell is enabled, start selling items
+            AutoSell()
+        else
+            -- If Auto Sell is disabled, stop the auto-sell loop
+            StopAutoSell()
+        end
+    end
+})
