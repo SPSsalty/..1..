@@ -40,7 +40,7 @@ local quantity = 1
 -- Predefined Options
 local itemIDOptions = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 local quantityOptions = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
-local itemOptions = {"Ice Pickaxe", "Grass Pickaxe", "God Pickaxe", "Gem Pickaxe", "Diamond Pickaxe", "Gold Pickaxe", "Dynamite"}
+local itemOptions = {"Void Pick", "Hellfire Pick", "Ice Pickaxe", "Grass Pickaxe", "God Pickaxe", "Gem Pickaxe", "Diamond Pickaxe", "Gold Pickaxe", "Dynamite"}
 
 -- Teleport Locations
 local teleportLocations = {
