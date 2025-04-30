@@ -40,9 +40,9 @@ local itemOptions = {"Ice Pickaxe", "Grass Pickaxe", "God Pickaxe", "Gem Pickaxe
 
 -- Define teleport locations
 local teleportLocations = {
-    ["Spawn"] = Vector3.new(2641.050537109375, -1000.2561645507812, -6723.2861328125),
-    ["Gem Mine"] = Vector3.new(2935.365478515625, -1004.4319458007812, -7047.2109375),
-    ["Desert"] = Vector3.new(200, 10, 200),
+    ["Spawn"] = Vector3.new(2641, -1000, -6723),
+    ["Gem Mine"] = Vector3.new(2935, -1004, -7047),
+    ["UnderWorld"] = Vector3.new(-948, -2154, -6704),
 }
 
 -- Add Dropdown for Item ID
@@ -92,7 +92,7 @@ end)
 local locationDropdown = TeleportBox:AddDropdown('Location Dropdown', {
     Text = 'Select Teleport Location',
     Default = "Spawn",  -- Default location
-    Values = {"Spawn", "Gem Mine", "Desert"},  -- Locations available in the dropdown
+    Values = {"Spawn", "Gem Mine", "UnderWorld"},  -- Locations available in the dropdown
     Callback = function(value)
         selectedLocation = teleportLocations[value]  -- Get the selected location coordinates
         print("Selected location: " .. value)  -- For debugging
