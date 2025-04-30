@@ -48,6 +48,28 @@ local teleportLocations = {
     ["UnderWorld"] = Vector3.new(-948, -2154, -6704),
 }
 
+-- UI Show/Hide with Keybind
+local keybind = Enum.KeyCode.RightShift  -- Default keybind is F1
+local uiVisible = true  -- Track UI visibility state
+
+-- Keybind Listener for Toggle
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end  -- Ignore if the input was already processed
+
+    if input.UserInputType == Enum.UserInputType.Keyboard then
+        if input.KeyCode == keybind then
+            uiVisible = not uiVisible
+            if uiVisible then
+                Library:Toggle()  -- Toggle UI visibility
+                print("UI Showed")
+            else
+                Library:Toggle()  -- Toggle UI visibility
+                print("UI Hidden")
+            end
+        end
+    end
+end)
+
 -- Add Dropdown for Item ID
 local itemIDDropdown = MainRightBox:AddDropdown('Item ID Dropdown', {
     Text = 'Select Item ID',
@@ -163,42 +185,14 @@ MainLeftBox:AddToggle('AutoSell', {
 -- Extra Information Section
 ExtraRightBox:AddLabel("Mining World V1.0")
 
--- Button to Close UI
-ExtraRightBox:AddButton("Close UI", function()
-    Library:Unload()  -- Unload the entire library, closing the UI
-    print("UI Closed")
-end)
-
--- UI Show/Hide with Keybind
-local keybind = Enum.KeyCode.F1  -- Default keybind is F1
-local uiVisible = true  -- Track UI visibility state
-
--- Keybind Listener for Toggle
-game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end  -- Ignore if the input was already processed
-
-    if input.UserInputType == Enum.UserInputType.Keyboard then
-        if input.KeyCode == keybind then
-            uiVisible = not uiVisible
-            if uiVisible then
-                Library:Toggle()  -- Toggle UI visibility
-                print("UI Showed")
-            else
-                Library:Toggle()  -- Toggle UI visibility
-                print("UI Hidden")
-            end
-        end
-    end
-end)
-
 -- Dropdown to Set Keybind
-ExtraLeftBox:AddDropdown("Set Keybind", {
-    Text = "Choose Keybind",
+ExtraRightBox:AddDropdown("Set Keybind", {
+    Text = "Hide/Show Keybind",
     Default = "F1",  -- Default key
-    Values = {"F1", "F2", "F3", "F4", "F5"},  -- List of available keys
+    Values = {"RightShift", "F2", "F3", "F4", "F5"},  -- List of available keys
     Callback = function(value)
         local keybinds = {
-            F1 = Enum.KeyCode.F1,
+            RightShift = Enum.KeyCode.RightShift,
             F2 = Enum.KeyCode.F2,
             F3 = Enum.KeyCode.F3,
             F4 = Enum.KeyCode.F4,
@@ -208,3 +202,11 @@ ExtraLeftBox:AddDropdown("Set Keybind", {
         print("Keybind set to: " .. value)
     end
 })
+
+-- Button to Close UI
+ExtraRightBox:AddButton("Close UI", function()
+    Library:Unload()  -- Unload the entire library, closing the UI
+    print("UI Closed")
+end)
+
+
