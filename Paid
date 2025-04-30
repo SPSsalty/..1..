@@ -22,6 +22,9 @@ local MainLeftBox = Tabs.Main:AddLeftGroupbox('Auto')
 local MainRightBox = Tabs.Main:AddRightGroupbox('AutoSell Settings')
 local BuyLeftBox = Tabs.Main:AddLeftGroupbox('Buy')
 
+-- Create a new groupbox for the Teleport section
+local TeleportBox = Tabs.Main:AddLeftGroupbox('Teleport')
+
 -- Variables to control the auto-sell loop
 local autoSellEnabled = false
 local sellLoop
@@ -34,6 +37,13 @@ local quantityOptions = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}  -- Example quantities
 
 -- Item options for the dropdown
 local itemOptions = {"Ice Pickaxe", "Grass Pickaxe", "God Pickaxe", "Gem Pickaxe", "Diamond Pickaxe", "Gold Pickaxe", "Dynamite"}
+
+-- Define teleport locations
+local teleportLocations = {
+    ["Spawn"] = Vector3.new(2641.050537109375, -1000.2561645507812, -6723.2861328125),
+    ["Gem Mine"] = Vector3.new(2935.365478515625, -1004.4319458007812, -7047.2109375),
+    ["Desert"] = Vector3.new(200, 10, 200),
+}
 
 -- Add Dropdown for Item ID
 local itemIDDropdown = MainRightBox:AddDropdown('Item ID Dropdown', {
@@ -70,14 +80,33 @@ local itemDropdown = BuyLeftBox:AddDropdown('Item Dropdown', {
 
 -- Add Button to Buy Selected Item
 BuyLeftBox:AddButton('Buy Item', function()
-    -- Buy the selected item using the BuyTool remote
     local args = {
         [1] = selectedItem  -- Pass the selected pickaxe name to the BuyTool remote
     }
 
-    -- Fire the BuyTool remote to purchase the item
     game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("BuyTool"):FireServer(unpack(args))
     print("Buying Item: " .. selectedItem)  -- For feedback
+end)
+
+-- Add Dropdown for teleport location selection in Teleport section
+local locationDropdown = TeleportBox:AddDropdown('Location Dropdown', {
+    Text = 'Select Teleport Location',
+    Default = "Spawn",  -- Default location
+    Values = {"Spawn", "Gem Mine", "Desert"},  -- Locations available in the dropdown
+    Callback = function(value)
+        selectedLocation = teleportLocations[value]  -- Get the selected location coordinates
+        print("Selected location: " .. value)  -- For debugging
+    end
+})
+
+-- Add Button to teleport to selected location
+TeleportBox:AddButton('Teleport to Location', function()
+    if selectedLocation then
+        LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(selectedLocation))
+        print("Teleporting to: " .. tostring(selectedLocation))  -- For feedback
+    else
+        print("No location selected!")  -- If no location is selected, show a warning
+    end
 end)
 
 -- Function to start the auto-sell loop
@@ -90,7 +119,6 @@ function AutoSell()
                 [2] = quantity  -- Use dynamic quantity
             }
 
-            -- Fire the SellItem remote with error handling
             local success, errorMessage = pcall(function()
                 game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("SellItem"):FireServer(unpack(args))
             end)
@@ -99,9 +127,9 @@ function AutoSell()
                 warn("Error while trying to sell item: " .. errorMessage)
             end
 
-            wait(0.5)  -- Throttle the loop with a delay to avoid rapid calls
+            wait(0.5)
         else
-            sellLoop:Disconnect()  -- Disconnect the loop when auto-sell is disabled
+            sellLoop:Disconnect()
         end
     end)
 end
@@ -110,7 +138,7 @@ end
 function StopAutoSell()
     autoSellEnabled = false
     if sellLoop then
-        sellLoop:Disconnect()  -- Stop the heartbeat loop if it's running
+        sellLoop:Disconnect()
     end
 end
 
@@ -123,11 +151,9 @@ MainLeftBox:AddToggle('AutoSell', {
     Flag = "AutoSell",  -- Used to save the toggle state across sessions
     Callback = function(state)
         if state then
-            -- If Auto Sell is enabled, start selling items
             AutoSell()
             statusLabel:SetText("Auto Sell Status: Active")
         else
-            -- If Auto Sell is disabled, stop the auto-sell loop
             StopAutoSell()
             statusLabel:SetText("Auto Sell Status: Inactive")
         end
