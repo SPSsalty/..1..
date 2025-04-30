@@ -19,7 +19,7 @@ Library.KeybindWarning = function(...) end
 
 local ThemeManager = loadstring(game:HttpGet(repo .. 'addons/ThemeManager.lua'))()
 
-local Window = Library:CreateWindow({ Title = 'Auralis | Premium Version', Center = true, AutoShow = true })
+local Window = Library:CreateWindow({ Title = 'Auralis | Free Version', Center = true, AutoShow = true })
 
 local Tabs = {
     Main = Window:AddTab('Main'),
